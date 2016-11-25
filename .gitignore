@@ -3,3 +3,4 @@
 .idea/
 *.xml
 Untitled.ipynb
+__pycache__/
