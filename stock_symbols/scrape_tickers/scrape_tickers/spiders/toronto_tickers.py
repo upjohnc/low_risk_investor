@@ -1,11 +1,12 @@
 import scrapy
 import urllib.parse as url_parse
+import os
 
 
 class TorontoSpider(scrapy.Spider):
     name = 'toronto_ticker'
     alphabet = [chr(x) for x in range(97, 123)]
-    toronto_exchange_code = 'TSE'
+    file_path = '../toronto_html'
 
     def start_requests(self):
         url_string = 'http://www.tmxmoney.com/TMX/HttpController?GetPage=ListedCompanyDirectory&SearchCriteria=Name&SearchKeyword={0}&SearchType=StartWith&Page=1&SearchIsMarket=Yes&Market=T&Language=en'
@@ -20,6 +21,7 @@ class TorontoSpider(scrapy.Spider):
         page_number = url_parse.parse_qs(qs)['Page'][0]
         search_letter = url_parse.parse_qs(qs)['SearchKeyword'][0]
         file_name = 'toronto_{search_letter}_{page_number}.html'.format(page_number=page_number, search_letter=search_letter)
+        file_name = os.path.join(self.file_path, file_name)
         with open(file_name, 'wb') as f:
             f.write(response.body)
 
