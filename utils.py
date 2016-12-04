@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup as bs
 
 
-def stock_prices(stock_name, start_date, end_date):
+def stock_prices_google(stock_name, start_date, end_date):
     '''
     stock_name format: exchange:ticker
     eg: NASDAQ:AAPL
@@ -25,4 +25,8 @@ def stock_prices(stock_name, start_date, end_date):
         df = df.append(df_temp)
         row_number += step
     df.reset_index(drop=True, inplace=True)
+    return df
+
+
+def stock_prices_nyse(stock_name, start_date, end_date):
     return df
