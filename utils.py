@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup as bs
+import os
 
 
 def stock_prices_google(stock_name, start_date, end_date):
@@ -63,3 +64,9 @@ def stock_prices_nyse(stock_name, date_start, date_end, page_number=1, df=pd.Dat
                         page_number += 1
                         return stock_prices_nyse(stock_name, date_start, date_end, page_number, df_)
     return df_
+
+
+def save_stock_prices_nyse(stock_folder, stock_name, date_start, date_end):
+    df = stock_prices_nyse(stock_name, date_start, date_end)
+    if not df.empty:
+        df.to_csv(os.path.join(stock_folder, 'nyse_{0}.csv'.format(stock_name.lower())))
