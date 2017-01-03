@@ -33,7 +33,7 @@ def dict_adv_decl(date_param):
     except:
         # for holidays
         date_param = date_param - dt.timedelta(days=1)
-        data = scrape_adv_decl(date_param)
+        data = dict_adv_decl(date_param)
 
     return data
 
