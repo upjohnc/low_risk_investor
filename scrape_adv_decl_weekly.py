@@ -37,7 +37,6 @@ def dict_adv_decl(date_param):
 
     return data
 
-
 df_adv_decl = pd.read_pickle('./results/adv_decl.pkl')
 
 # find number of weeks missing
