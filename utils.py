@@ -2,6 +2,12 @@ import pandas as pd
 import numpy as np
 
 
+def get_nyse(stock_name):
+    df = pd.read_csv('./stock_prices/nyse_{}.csv'.format(stock_name))
+    df = get_clean_and_n(df)
+    return df
+
+
 def get_clean_and_n(df_origin):
     df = df_origin.copy()
     df = clean_nyse(df)
@@ -48,6 +54,7 @@ def calc_buy_trigger(df_origin):
 
 def clean_nyse(df_original):
     df = df_original.copy()
+    df.columns = [i.lower() for i in df.columns]
     df = df.drop(df.columns[0], axis=1)
     df['date'] = pd.to_datetime(df['date'])
     return df
