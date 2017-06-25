@@ -55,6 +55,15 @@ def calc_buy_trigger(df_origin):
 def clean_nyse(df_original):
     df = df_original.copy()
     df.columns = [i.lower() for i in df.columns]
+    if df['high'].dtype == 'O' or df['low'].dtype == 'O':
+        if df['high'].dtype == 'O':
+            df = df.loc[df['high'] != '-']
+        if df['low'].dtype == 'O':
+            df = df.loc[df['low'] != '-']
+        df['high'] = df['high'].astype('float')
+        df['low'] = df['low'].astype('float')
+        df['close'] = df['close'].astype('float')
     df = df.drop(df.columns[0], axis=1)
+    df = df.reset_index(drop=True)
     df['date'] = pd.to_datetime(df['date'])
     return df
