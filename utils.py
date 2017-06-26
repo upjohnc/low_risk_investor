@@ -54,6 +54,8 @@ def clean_nyse(df_original):
         return None
     df = df_original.copy()
     df.columns = [i.lower() for i in df.columns]
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date', axis=0).reset_index(drop=True)
     if df['high'].dtype == 'O' or df['low'].dtype == 'O':
         if df['high'].dtype == 'O':
             df = df.loc[df['high'] != '-']
@@ -64,5 +66,48 @@ def clean_nyse(df_original):
         df['close'] = df['close'].astype('float')
     df = df.drop(df.columns[0], axis=1)
     df = df.reset_index(drop=True)
-    df['date'] = pd.to_datetime(df['date'])
+    return df
+
+
+def get_long_data(df_original):
+    df = df_original.copy()
+    df = df[[i for i in df.columns if i not in ['volume', 'pdc', 'tr']]]
+
+    max_window = 50
+    max_name = 'max_{}'.format(max_window)
+    min_window = 20
+    min_name = 'min_{}'.format(min_window)
+
+    df[max_name] = df['high'].shift().rolling(max_window).max()
+
+    df[min_name] = df['low'].shift().rolling(min_window).min()
+
+    df['buy_signal'] = df['high'] > df[max_name]
+
+    df['stop'] = df[max_name] - 2 * df['N']
+
+    df['exit'] = df['low'] < df[min_name]
+
+    return df
+
+
+def get_short_data(df_original):
+    df = df_original.copy()
+    df = df[[i for i in df.columns if i not in ['volume', 'pdc', 'tr']]]
+
+    buy_window = 50
+    buy_name = 'buy_{}'.format(buy_window)
+    exit_window = 20
+    exit_name = 'exit_{}'.format(exit_window)
+
+    df[buy_name] = df['low'].shift().rolling(buy_window).min()
+
+    df[exit_name] = df['high'].shift().rolling(exit_window).max()
+
+    df['buy_signal'] = df['low'] < df[buy_name]
+
+    df['stop'] = df[buy_name] + 2 * df['N']
+
+    df['exit'] = df['high'] > df[exit_name]
+
     return df
