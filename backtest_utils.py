@@ -15,3 +15,6 @@
 
 # variable of the last row checked
 # loop while row < the last row in the dataframe
+
+# call to get what to do--if none move on else save results
+# function should do check and give the updates of the stop, exit, and new buy
