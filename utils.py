@@ -84,7 +84,9 @@ def get_long_data(df_original):
 
     df['buy_signal'] = df['high'] > df[max_name]
 
-    df['stop'] = df[max_name] - 2 * df['N']
+    df['next_buy'] = df['high'] + 0.5 * df['N']
+
+    df['stop'] = df['high'] - 2 * df['N']
 
     df['exit'] = df['low'] < df[min_name]
 
@@ -105,6 +107,8 @@ def get_short_data(df_original):
     df[exit_name] = df['high'].shift().rolling(exit_window).max()
 
     df['buy_signal'] = df['low'] < df[buy_name]
+
+    df['next_buy'] = df[buy_name] - 0.5 * df['N']
 
     df['stop'] = df[buy_name] + 2 * df['N']
 
