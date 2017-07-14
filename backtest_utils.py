@@ -30,16 +30,43 @@ df_positions = pd.DataFrame(columns=['buy_row', 'buy_price', 'stop', 'next_buy',
 
 row_tested = -1
 
+
+def add_buy(df_positions_orig, df_market_orig, row_tested_orig):
+    df_pos = df_positions_orig.copy()
+    df_market_data = df_market_orig.copy()
+    positions_row = df_pos.shape[0]
+    ### should this just be a row that then gets appended
+    df_pos.loc[positions_row, 'buy_price'] = df_market_data.loc[row_tested_orig, 'max_50']
+    df_pos.loc[positions_row, 'buy_row'] = row_tested
+    df_pos.loc[positions_row, 'stop'] = df_market_data.loc[row_tested_orig, 'stop'].tolist()
+    df_pos.loc[positions_row, 'next_buy'] = df_market_data.loc[row_tested_orig, 'next_buy'].tolist()
+    return df_pos
+
+
 while True:
     row_tested += 1
     # if no open positions
-    if df_positions.empty or df_positions['sell_price'].isnull().any():
+    mask_open_positions = df_positions['sell_price'].isnull()
+    if df_positions.empty or mask_open_positions.any():
         if df_long.loc[row_tested, 'buy_signal']:
-            positions_row = df_positions.shape[0]
-            df_positions.loc[positions_row, 'buy_price'] = df_long.loc[row_tested, 'max_50']
-            df_positions.loc[positions_row, 'buy_row'] = row_tested
-            df_positions.loc[positions_row, 'stop'] = df_long.loc[row_tested, 'stop']
-            df_positions.loc[positions_row, 'next_buy'] = df_long.loc[row_tested, 'next_buy']
+            thing = add_buy(df_positions, df_long, row_tested)
+            # positions_row = df_positions.shape[0]
+            # df_positions.loc[positions_row, 'buy_price'] = df_long.loc[row_tested, 'max_50']
+            # df_positions.loc[positions_row, 'buy_row'] = row_tested
+            # df_positions.loc[positions_row, 'stop'] = df_long.loc[row_tested, 'stop'].tolist()
+            # df_positions.loc[positions_row, 'next_buy'] = df_long.loc[row_tested, 'next_buy'].tolist()
+    else:
+        # test the stop or exit lower than low
+        min_stop_exit = min(df_positions.loc[-1, ['stop']][-1], df_long.loc[row_tested, 'exit'])
+        next_buy_value = df_positions.loc[-1, ['next_buy']][-1]
+        if min_stop_exit > df_long.loc[row_tested, 'low']:
+            df_positions.loc[mask_open_positions, 'sell_price'] = df_long.loc[row_tested, ['low']]
+        elif next_buy_value > df_long.loc[row_tested, 'high']:
+            # save new stop value
+            # save new next_buy in open positions
+            # save new purchase
+            df_positions.loc[df_positions.shape[0], '']
+
     if row_tested > 60:
         break
 
