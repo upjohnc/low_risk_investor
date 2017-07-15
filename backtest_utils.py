@@ -23,12 +23,12 @@ from utils import get_nyse, get_long_data
 import pandas as pd
 
 
-def big_test():
+def big_test(start_index, end_index):
     df = get_nyse('a')
 
     df_long = get_long_data(df)
 
-    row_tested = -1
+    row_tested = start_index
 
     df_new_empty = pd.DataFrame(columns=['buy_row', 'buy_price', 'stop', 'next_buy', 'sell_price'])
 
@@ -45,7 +45,6 @@ def big_test():
         return df_new
 
     while True:
-        row_tested += 1
         if not df_positions['sell_price'].isnull().any():
             if df_long.loc[row_tested, 'buy_signal']:
                 df_new_row = add_position(df_long, row_tested)
@@ -68,7 +67,8 @@ def big_test():
                 df_new_row = add_position(df_long, row_tested, next_buy_value)
                 df_positions = df_positions.append(df_new_row).reset_index(drop=True)
 
-        if row_tested > 500:
+        row_tested += 1
+        if row_tested > end_index or row_tested >= df_long.shape[0]:
             break
 
     return df_positions
