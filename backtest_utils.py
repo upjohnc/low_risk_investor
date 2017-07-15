@@ -33,9 +33,11 @@ df_new_empty = pd.DataFrame(columns=['buy_row', 'buy_price', 'stop', 'next_buy',
 df_positions = df_new_empty.copy()
 
 
-def add_position(df_long_orig, row_tested_orig):
+def add_position(df_long_orig, row_tested_orig, buy_price=None):
     df_new = df_new_empty.copy()
-    df_new.loc[0, 'buy_price'] = df_long_orig.loc[row_tested_orig, 'max_50']
+    if buy_price is None:
+        buy_price = df_long_orig.loc[row_tested_orig, 'max_50']
+    df_new.loc[0, 'buy_price'] = buy_price
     df_new.loc[0, 'buy_row'] = row_tested_orig
     df_new.loc[0, 'stop'] = [df_long_orig.loc[row_tested_orig, 'stop']]
     df_new.loc[0, 'next_buy'] = [df_long_orig.loc[row_tested_orig, 'next_buy']]
@@ -60,11 +62,8 @@ while True:
             for index, value in df_positions.loc[mask_open].iterrows():
                 value['stop'].extend([df_long.loc[row_tested, 'stop']])
                 value['next_buy'].extend([df_long.loc[row_tested, 'next_buy']])
-            df_new_row = df_new_empty.copy()
-            df_new_row.loc[0, 'buy_price'] = next_buy_value
-            df_new_row.loc[0, 'buy_row'] = row_tested
-            df_new_row.loc[0, 'stop'] = [df_long.loc[row_tested, 'stop']]
-            df_new_row.loc[0, 'next_buy'] = [df_long.loc[row_tested, 'next_buy']]
+
+            df_new_row = add_position(df_long, row_tested, next_buy_value)
             df_positions = df_positions.append(df_new_row).reset_index(drop=True)
     if row_tested > 100:
         break
