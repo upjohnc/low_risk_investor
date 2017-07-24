@@ -22,52 +22,53 @@
 from utils import get_nyse, get_long_data
 import pandas as pd
 
-df = get_nyse('a')
 
-df_long = get_long_data(df)
+def big_test(start_index, end_index):
+    df = get_nyse('a')
 
-df_positions = pd.DataFrame(columns=['buy_row', 'buy_price', 'stop', 'next_buy', 'sell_price'])
+    df_long = get_long_data(df)
 
-row_tested = -1
+    row_tested = start_index
 
+    df_new_empty = pd.DataFrame(columns=['buy_row', 'buy_price', 'stop', 'next_buy', 'sell_price'])
 
-def add_buy(df_positions_orig, df_market_orig, row_tested_orig):
-    df_pos = df_positions_orig.copy()
-    df_market_data = df_market_orig.copy()
-    positions_row = df_pos.shape[0]
-    ### should this just be a row that then gets appended
-    df_pos.loc[positions_row, 'buy_price'] = df_market_data.loc[row_tested_orig, 'max_50']
-    df_pos.loc[positions_row, 'buy_row'] = row_tested
-    df_pos.loc[positions_row, 'stop'] = df_market_data.loc[row_tested_orig, 'stop'].tolist()
-    df_pos.loc[positions_row, 'next_buy'] = df_market_data.loc[row_tested_orig, 'next_buy'].tolist()
-    return df_pos
+    df_positions = df_new_empty.copy()
 
+    def add_position(df_long_orig, row_tested_orig, buy_price=None):
+        df_new = df_new_empty.copy()
+        if buy_price is None:
+            buy_price = df_long_orig.loc[row_tested_orig, 'max_50']
+        df_new.loc[0, 'buy_price'] = buy_price
+        df_new.loc[0, 'buy_row'] = row_tested_orig
+        df_new.loc[0, 'stop'] = [df_long_orig.loc[row_tested_orig, 'stop']]
+        df_new.loc[0, 'next_buy'] = [df_long_orig.loc[row_tested_orig, 'next_buy']]
+        return df_new
 
-while True:
-    row_tested += 1
-    # if no open positions
-    mask_open_positions = df_positions['sell_price'].isnull()
-    if df_positions.empty or mask_open_positions.any():
-        if df_long.loc[row_tested, 'buy_signal']:
-            thing = add_buy(df_positions, df_long, row_tested)
-            # positions_row = df_positions.shape[0]
-            # df_positions.loc[positions_row, 'buy_price'] = df_long.loc[row_tested, 'max_50']
-            # df_positions.loc[positions_row, 'buy_row'] = row_tested
-            # df_positions.loc[positions_row, 'stop'] = df_long.loc[row_tested, 'stop'].tolist()
-            # df_positions.loc[positions_row, 'next_buy'] = df_long.loc[row_tested, 'next_buy'].tolist()
-    else:
-        # test the stop or exit lower than low
-        min_stop_exit = min(df_positions.loc[-1, ['stop']][-1], df_long.loc[row_tested, 'exit'])
-        next_buy_value = df_positions.loc[-1, ['next_buy']][-1]
-        if min_stop_exit > df_long.loc[row_tested, 'low']:
-            df_positions.loc[mask_open_positions, 'sell_price'] = df_long.loc[row_tested, ['low']]
-        elif next_buy_value > df_long.loc[row_tested, 'high']:
-            # save new stop value
-            # save new next_buy in open positions
-            # save new purchase
-            df_positions.loc[df_positions.shape[0], '']
+    while True:
+        if not df_positions['sell_price'].isnull().any():
+            if df_long.loc[row_tested, 'buy_signal']:
+                df_new_row = add_position(df_long, row_tested)
+                df_positions = df_positions.append(df_new_row).reset_index(drop=True)
 
-    if row_tested > 60:
-        break
+        else:
+            next_buy_value = df_positions.iloc[-1]['next_buy'][-1]
+            if df_positions.iloc[-1]['stop'][-1] > df_long.loc[row_tested, 'low']:
+                mask_open = df_positions['sell_price'].isnull()
+                df_positions.loc[mask_open, 'sell_price'] = df_positions.iloc[-1]['stop'][-1]
+            elif df_long.loc[row_tested, 'exit'] > df_long.loc[row_tested, 'low']:
+                mask_open = df_positions['sell_price'].isnull()
+                df_positions.loc[mask_open, 'sell_price'] = df_long.loc[row_tested, 'exit']
+            elif df_long.loc[row_tested, 'high'] > next_buy_value:
+                mask_open = df_positions['sell_price'].isnull()
+                for index, value in df_positions.loc[mask_open].iterrows():
+                    value['stop'].extend([df_long.loc[row_tested, 'stop']])
+                    value['next_buy'].extend([df_long.loc[row_tested, 'next_buy']])
 
-print(df_positions)
+                df_new_row = add_position(df_long, row_tested, next_buy_value)
+                df_positions = df_positions.append(df_new_row).reset_index(drop=True)
+
+        row_tested += 1
+        if row_tested > end_index or row_tested >= df_long.shape[0]:
+            break
+
+    return df_positions
