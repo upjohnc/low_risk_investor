@@ -72,5 +72,3 @@ def big_test(start_index, end_index):
             break
 
     return df_positions
-
-
