@@ -1,1 +1,3 @@
 add reason for exit
+
+calc == 1% * account ($1000) / N
