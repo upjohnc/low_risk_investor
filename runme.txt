@@ -1,5 +1,0 @@
-from backtest import big_test
-
-df = big_test(250, 840)
-
-# df should look like the hand tested
