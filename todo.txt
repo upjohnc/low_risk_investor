@@ -1,24 +1,3 @@
-add reason for exit
-
-calc == 1% * account ($1000) / N
-
-# shares = round_down(1%*account)/N / Buy price
-
-
-# Set me
-import pandas as pd
-import numpy as np
-import os
-from utils import get_nyse, get_long_data
-
-df = get_nyse('a')
-
-df_long = get_long_data(df)
-
-from backtest_utils import big_test
-
-df_positions = big_test(0, 1900)
-
-# df should look like the hand tested
-
-df_positions.merge(df_long[['N']], how='left', left_on='buy_row', right_index=True)
+symbol = 'a'
+df_end = run_for_output(symbol)
+df_end.to_csv('whoa.csv')

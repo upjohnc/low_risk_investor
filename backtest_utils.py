@@ -21,12 +21,12 @@
 
 from utils import get_nyse, get_long_data
 import pandas as pd
+import numpy as np
 
 
-def big_test(start_index, end_index):
-    df = get_nyse('a')
+def get_positions(start_index, end_index, df_long_orig):
 
-    df_long = get_long_data(df)
+    df_long = df_long_orig.copy()
 
     row_tested = start_index
 
@@ -34,14 +34,14 @@ def big_test(start_index, end_index):
 
     df_positions = df_new_empty.copy()
 
-    def add_position(df_long_orig, row_tested_orig, buy_price=None):
+    def add_position(df_long_for_add, row_tested_orig, buy_price=None):
         df_new = df_new_empty.copy()
         if buy_price is None:
-            buy_price = df_long_orig.loc[row_tested_orig, 'max_50']
+            buy_price = df_long_for_add.loc[row_tested_orig, 'max_50']
         df_new.loc[0, 'buy_price'] = buy_price
         df_new.loc[0, 'buy_row'] = row_tested_orig
-        df_new.loc[0, 'stop'] = [df_long_orig.loc[row_tested_orig, 'stop']]
-        df_new.loc[0, 'next_buy'] = [df_long_orig.loc[row_tested_orig, 'next_buy']]
+        df_new.loc[0, 'stop'] = [df_long_for_add.loc[row_tested_orig, 'stop']]
+        df_new.loc[0, 'next_buy'] = [df_long_for_add.loc[row_tested_orig, 'next_buy']]
         return df_new
 
     while True:
@@ -49,7 +49,6 @@ def big_test(start_index, end_index):
             if df_long.loc[row_tested, 'buy_signal']:
                 df_new_row = add_position(df_long, row_tested)
                 df_positions = df_positions.append(df_new_row).reset_index(drop=True)
-
         else:
             next_buy_value = df_positions.iloc[-1]['next_buy'][-1]
             if df_positions.iloc[-1]['stop'][-1] > df_long.loc[row_tested, 'low']:
@@ -72,3 +71,25 @@ def big_test(start_index, end_index):
             break
 
     return df_positions
+
+
+def run_for_output(symbol):
+    df = get_nyse(symbol)
+
+    df_long = get_long_data(df)
+
+    df_positions = get_positions(0, df_long.shape[0] - 1, df_long)
+
+    # df should look like the hand tested
+
+    df_results = df_positions.merge(df_long[['N']], how='left', left_on='buy_row', right_index=True)
+
+    account = 20000
+    df_results['thing'] = (account * 0.1) / df_results['N']
+    df_results['shares'] = (df_results['thing'] / df_results['buy_price']).apply(np.floor)
+    df_results['amount_invested'] = df_results['shares'] * df_results['buy_price']
+    df_results['amount_retrieved'] = df_results['shares'] * df_results['sell_price']
+    df_results['win'] = df_results['amount_retrieved'] - df_results['amount_invested']
+    df_results['percent_win'] = df_results['win'] / df_results['amount_invested']
+
+    return df_results
