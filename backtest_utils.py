@@ -22,10 +22,10 @@
 from utils import get_nyse, get_long_data
 import pandas as pd
 import numpy as np
+import os
 
 
 def get_positions(start_index, end_index, df_long_orig):
-
     df_long = df_long_orig.copy()
 
     row_tested = start_index
@@ -93,3 +93,13 @@ def run_for_output(symbol):
     df_results['percent_win'] = df_results['win'] / df_results['amount_invested']
 
     return df_results
+
+
+def run_all_symbols():
+    all_files = os.listdir('./stock_prices/')
+    for file in all_files:
+        if 'nyse' in file:
+            symbol = file.replace('nyse_', '')
+            symbol = symbol[:-4]
+            df = run_for_output(symbol)
+            df.to_csv('./results/results_{}.csv'.format(symbol))
