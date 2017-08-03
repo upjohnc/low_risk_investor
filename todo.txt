@@ -3,3 +3,6 @@ Look at `bbw` and `ceo` and `ddc` and `uri`
 at least 2 years of history.
 1 year periods that are at least 100% change.
 check that the last six months haven't turned into flat stocks (maybe - last 6 months: max(high) > $10)
+check for daily volume greater than 1,000
+
+call `test_specific_stock(symbol)`  - right now uses 2016, 1, 1 as the date for today_date
