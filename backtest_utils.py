@@ -86,7 +86,7 @@ def run_for_output(symbol):
 
     account = 20000
     df_results['thing'] = (account * 0.1) / df_results['N']
-    df_results['shares'] = (df_results['thing'] / df_results['buy_price']).apply(np.floor)
+    df_results['shares'] = (df_results['thing'] / df_results['buy_price']).apply(np.round)#(np.floor)
     df_results['amount_invested'] = df_results['shares'] * df_results['buy_price']
     df_results['amount_retrieved'] = df_results['shares'] * df_results['sell_price']
     df_results['win'] = df_results['amount_retrieved'] - df_results['amount_invested']
@@ -101,5 +101,9 @@ def run_all_symbols():
         if 'nyse' in file:
             symbol = file.replace('nyse_', '')
             symbol = symbol[:-4]
-            df = run_for_output(symbol)
-            df.to_csv('./results/results_{}.csv'.format(symbol))
+            try:
+                df = run_for_output(symbol)
+                df.to_csv('./results/results_{}.csv'.format(symbol))
+            except Exception as e:
+                with open('./results/results_{}.csv'.format(symbol), 'wb+') as f:
+                    f.write(str(e).encode())
