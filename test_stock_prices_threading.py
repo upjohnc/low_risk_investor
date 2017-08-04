@@ -1,19 +1,10 @@
-
-# coding: utf-8
-
-# In[1]:
-
 from utils_price_scraping import save_stock_prices_nyse
 import pandas as pd
 import datetime as dt
-import numpy as np
 from threading import Thread
 from queue import Queue
 import time
 import os
-
-
-# In[2]:
 
 start_date = dt.datetime(2015, 1, 1)
 end_date = dt.datetime(2016, 10, 10)
@@ -21,13 +12,7 @@ end_date = dt.datetime(2016, 10, 10)
 folder_stock_prices = './test'
 folder_stock_symbols = './stock_symbols'
 
-
-# In[3]:
-
 params_ = Queue()
-
-
-# In[4]:
 
 df_nyse_symbols = pd.read_csv(os.path.join(folder_stock_symbols, 'NYSE.csv'))
 df_nyse_symbols.columns = [x.replace(' ', '_').lower() for x in df_nyse_symbols.columns]
@@ -35,18 +20,14 @@ df_nyse_symbols['symbol_lower'] = df_nyse_symbols['symbol'].str.lower()
 df_nyse_symbols['ticker'] = 'NYSE:' + df_nyse_symbols['symbol']
 
 
-# In[18]:
-
 def create_queue():
     ticker_have = [i.strip('nyse_').replace('.csv', '') for i in os.listdir(folder_stock_prices) if '.DS' not in i]
-#     df_temp =  df_nyse_symbols.loc[~df_nyse_symbols['symbol_lower'].isin(ticker_have)]
-    df_temp =  df_nyse_symbols.loc[:40]
+    #     df_temp =  df_nyse_symbols.loc[~df_nyse_symbols['symbol_lower'].isin(ticker_have)]
+    df_temp = df_nyse_symbols.loc[:40]
     symbols = df_temp['symbol_lower'].tolist()
     for symbol in symbols:
         params_.put((folder_stock_prices, symbol, start_date, end_date))
 
-
-# In[19]:
 
 def main():
     while True:
@@ -54,8 +35,6 @@ def main():
         save_stock_prices_nyse(*p)
         params_.task_done()
 
-
-# In[20]:
 
 create_queue()
 t1 = time.time()
@@ -66,9 +45,3 @@ for _ in range(number_of_threads):
 params_.join()
 t2 = time.time()
 print(t2 - t1)
-
-
-# In[ ]:
-
-
-
