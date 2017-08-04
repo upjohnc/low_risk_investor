@@ -4,6 +4,7 @@ import os
 # import asyncio
 import pandas as pd
 import time
+import datetime as dt
 from bs4 import BeautifulSoup as bs
 
 
@@ -80,49 +81,32 @@ def save_stock_prices_nyse(stock_folder, stock_name, date_start, date_end):
 
 
 def stock_prices_nasdaq(stock_name, date_start, date_end, df=pd.DataFrame()):
-    def set_header(df_header):
-        '''reset the header row'''
-        df_header_ = df_header.copy()
-        df_header_.columns = df_header_.loc[0].tolist()
-        df_header_ = df_header_.drop(labels=0)
-        return df_header_
-
     if not df.empty:
         df_ = df.copy()
     else:
         df_ = df
 
-    stock_name = 'aapl'
-    start_date_format = '{month}+{day}%2C+{year}'.format(month=date_start.strftime('%b'), day=date_start.strftime('%d'),
-                                                         year=date_start.strftime('%Y'))
-    end_date_format = '{month}+{day}%2C+{year}'.format(month=date_end.strftime('%b'), day=date_end.strftime('%d'),
-                                                       year=date_end.strftime('%Y'))
-    query = 'https://www.google.com/finance/historical?q=NASDAQ%3A{stock}&num=100&startdate={start_date}&enddate={end_date}'.format(
-        stock=stock_name.upper(), start_date=start_date_format, end_date=end_date_format)
+    number_of_rows = 100
+    startdate = date_end - dt.timedelta(days=number_of_rows - 1)
+    if startdate < date_start:
+        startdate = date_start
+    enddate = date_end
+    start_date_format = '{month}+{day}%2C+{year}'.format(month=startdate.strftime('%b'), day=startdate.strftime('%d'),
+                                                         year=startdate.strftime('%Y'))
+    end_date_format = '{month}+{day}%2C+{year}'.format(month=enddate.strftime('%b'), day=enddate.strftime('%d'),
+                                                       year=enddate.strftime('%Y'))
+    query = 'https://www.google.com/finance/historical?q=NASDAQ%3A{stock}&num={rows}&startdate={start_date}&enddate={end_date}'.format(
+        stock=stock_name, start_date=start_date_format, end_date=end_date_format, rows=number_of_rows)
     response = requests.get(query)
 
-    t = bs(response.text, 'lxml')
+    bs_response = bs(response.text, 'lxml')
 
-    pd.read_html(str(t.findAll('table', {'class': 'gf-table historical_price'})[0]), header=0)
+    df_temp = pd.read_html(str(bs_response.findAll('table', {'class': 'gf-table historical_price'})[0]), header=0)[0]
 
-    ## todo :: need to recursively go through since the limitation of the number of rows
-    bs_page = bs(response.text, 'lxml')
-    # table_data = bs_page.find_all('table', {'class': 'qm_history_historyContent'})
-    # if table_data:
-    #     df_temp = pd.read_html(str(table_data[0]))[0]
-    #     df_temp = set_header(df_temp)
-    #     df_ = df_.append(df_temp)
-    # span_page_number = bs_page.find_all('span', {'class': 'qm_text'})
-    # if len(span_page_number) > 0:
-    #     for span in span_page_number:
-    #         text_ = span.text
-    #         if 'of ' in text_:
-    #             total_pages = int(text_.split()[-1])
-    #             if page_number < total_pages:
-    #                 page_number += 1
-    #                 return stock_prices_nyse(stock_name, date_start, date_end, page_number, df_)
-    # return df_
-    return bs_page
+    df_ = df_.append(df_temp)
+    if startdate > date_start:
+        return stock_prices_nasdaq(stock_name, date_start, startdate - dt.timedelta(days=1), df_)
+    return df_.reset_index(drop=True)
 
 
 async def stock_prices_nyse_asyncio(stock_name, date_start, date_end, page_number=1, df=pd.DataFrame()):
