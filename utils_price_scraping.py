@@ -81,6 +81,12 @@ def save_stock_prices_nyse(stock_folder, stock_name, date_start, date_end):
 
 
 def stock_prices_nasdaq(stock_name, date_start, date_end, df=pd.DataFrame()):
+    def clean_data(df_orig):
+        df_clean = df_orig.copy()
+        df_clean.columns = [i.lower().replace(' ', '') for i in df_clean.columns]
+        df_clean['date'] = pd.to_datetime(df_clean['date'])
+        return df_clean
+
     if not df.empty:
         df_ = df.copy()
     else:
@@ -101,12 +107,20 @@ def stock_prices_nasdaq(stock_name, date_start, date_end, df=pd.DataFrame()):
 
     bs_response = bs(response.text, 'lxml')
 
-    df_temp = pd.read_html(str(bs_response.findAll('table', {'class': 'gf-table historical_price'})[0]), header=0)[0]
-
-    df_ = df_.append(df_temp)
-    if startdate > date_start:
-        return stock_prices_nasdaq(stock_name, date_start, startdate - dt.timedelta(days=1), df_)
+    table_data = bs_response.findAll('table', {'class': 'gf-table historical_price'})
+    if len(table_data) > 0:
+        df_temp = pd.read_html(str(table_data[0]), header=0)[0]
+        df_temp = clean_data(df_temp)
+        df_ = df_.append(df_temp)
+        if startdate > date_start:
+            return stock_prices_nasdaq(stock_name, date_start, startdate - dt.timedelta(days=1), df_)
     return df_.reset_index(drop=True)
+
+
+def save_stock_prices_nasdaq(stock_folder, stock_name, date_start, date_end):
+    df = stock_prices_nasdaq(stock_name, date_start, date_end)
+    if not df.empty:
+        df.to_csv(os.path.join(stock_folder, 'nasdaq_{0}.csv'.format(stock_name.lower())))
 
 
 async def stock_prices_nyse_asyncio(stock_name, date_start, date_end, page_number=1, df=pd.DataFrame()):
