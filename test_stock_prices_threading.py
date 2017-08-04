@@ -3,7 +3,7 @@
 
 # In[1]:
 
-from utils import save_stock_prices_nyse
+from utils_price_scraping import save_stock_prices_nyse
 import pandas as pd
 import datetime as dt
 import numpy as np
