@@ -1,7 +1,7 @@
 import requests
 import os
-# import aiohttp
-# import asyncio
+import aiohttp
+import asyncio
 import pandas as pd
 import time
 import datetime as dt
@@ -118,7 +118,8 @@ def stock_prices_nasdaq(stock_name, date_start, date_end, df=pd.DataFrame()):
 
 
 def save_stock_prices_nasdaq(stock_folder, stock_name, date_start, date_end):
-    df = stock_prices_nasdaq(stock_name, date_start, date_end)
+    # df = stock_prices_nasdaq(stock_name, date_start, date_end)
+    df = stock_prices_nyse(stock_name, date_start, date_end)
     if not df.empty:
         df.to_csv(os.path.join(stock_folder, 'nasdaq_{0}.csv'.format(stock_name.lower())))
 
