@@ -30,7 +30,7 @@ def get_positions(start_index, end_index, df_long_orig):
 
     row_tested = start_index
 
-    df_new_empty = pd.DataFrame(columns=['buy_row', 'buy_price', 'stop', 'next_buy', 'sell_price'])
+    df_new_empty = pd.DataFrame(columns=['buy_row', 'buy_date', 'buy_price', 'stop', 'next_buy', 'sell_price'])
 
     df_positions = df_new_empty.copy()
 
@@ -38,8 +38,10 @@ def get_positions(start_index, end_index, df_long_orig):
         df_new = df_new_empty.copy()
         if buy_price is None:
             buy_price = df_long_for_add.loc[row_tested_orig, 'max_50']
-        df_new.loc[0, 'buy_price'] = buy_price
         df_new.loc[0, 'buy_row'] = row_tested_orig
+        df_new.loc[0, 'buy_date'] = df_long_for_add.loc[row_tested_orig, 'date']
+
+        df_new.loc[0, 'buy_price'] = buy_price
         df_new.loc[0, 'stop'] = [df_long_for_add.loc[row_tested_orig, 'stop']]
         df_new.loc[0, 'next_buy'] = [df_long_for_add.loc[row_tested_orig, 'next_buy']]
         return df_new
@@ -75,6 +77,8 @@ def get_positions(start_index, end_index, df_long_orig):
 
 def run_for_output(symbol):
     df = get_nyse(symbol)
+    if df is None:
+        return None
 
     df_long = get_long_data(df)
 
@@ -85,8 +89,8 @@ def run_for_output(symbol):
     df_results = df_positions.merge(df_long[['N']], how='left', left_on='buy_row', right_index=True)
 
     account = 20000
-    df_results['thing'] = (account * 0.1) / df_results['N']
-    df_results['shares'] = (df_results['thing'] / df_results['buy_price']).apply(np.round)#(np.floor)
+    df_results['thing'] = (account * 0.01) / df_results['N']
+    df_results['shares'] = (df_results['thing'] / df_results['buy_price']).apply(np.round)  # (np.floor)
     df_results['amount_invested'] = df_results['shares'] * df_results['buy_price']
     df_results['amount_retrieved'] = df_results['shares'] * df_results['sell_price']
     df_results['win'] = df_results['amount_retrieved'] - df_results['amount_invested']
@@ -96,14 +100,12 @@ def run_for_output(symbol):
 
 
 def run_all_symbols():
-    all_files = os.listdir('./stock_prices/')
+    all_files = os.listdir('./stock_prices/nyse/')
     for file in all_files:
         if 'nyse' in file:
             symbol = file.replace('nyse_', '')
             symbol = symbol[:-4]
-            try:
-                df = run_for_output(symbol)
-                df.to_csv('./results/results_{}.csv'.format(symbol))
-            except Exception as e:
-                with open('./results/results_{}.csv'.format(symbol), 'wb+') as f:
-                    f.write(str(e).encode())
+            print(symbol)
+            df = run_for_output(symbol)
+            if df is not None:
+                df.to_csv('./results/nyse/results_{}.csv'.format(symbol))

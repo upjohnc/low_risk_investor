@@ -3,7 +3,7 @@ import numpy as np
 
 
 def get_nyse(stock_name):
-    df = pd.read_csv('./stock_prices/nyse_{}.csv'.format(stock_name))
+    df = pd.read_csv('./stock_prices/nyse/nyse_{}.csv'.format(stock_name))
     df = get_clean_and_n(df)
     return df
 
