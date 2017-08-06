@@ -1,38 +1,9 @@
 import requests
 import os
 import aiohttp
-import asyncio
 import pandas as pd
-import time
 import datetime as dt
 from bs4 import BeautifulSoup as bs
-
-
-def stock_prices_google(stock_name, start_date, end_date):
-    '''
-    stock_name format: exchange:ticker
-    eg: NASDAQ:AAPL
-    '''
-    row_number = start_number = 0
-    step = rows_returned = 10
-    df = pd.DataFrame()
-    while True:
-        query = 'https://www.google.com/finance/historical?q={stock[0]}%3A{stock[1]}&startdate={start_month}%20{start_day}%2C%20{start_year}&enddate={end_month}%20{end_day}%2C%20{end_year}&ei=NXw3WMG9KtWNmAHcobLABw&start={start_number}&num={rows_returned}'.format(
-            stock=stock_name.split(':'), start_month=start_date.strftime('%b'), start_day=start_date.day,
-            start_year=start_date.year,
-            end_month=end_date.strftime('%b'), end_day=end_date.day, end_year=end_date.year, start_number=row_number,
-            rows_returned=rows_returned)
-        response = requests.get(query)
-        bs_response = bs(response.text, 'lxml')
-        if len(bs_response.find_all(id="prices")) == 0:
-            break
-        df_temp = pd.read_html(str(bs_response.find_all(id="prices")[0]))[0]
-        df_temp = df_temp.drop(labels=0)
-        df_temp.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
-        df = df.append(df_temp)
-        row_number += step
-    df.reset_index(drop=True, inplace=True)
-    return df
 
 
 def stock_prices_nyse(stock_name, date_start, date_end, page_number=1, df=pd.DataFrame()):
@@ -80,43 +51,6 @@ def save_stock_prices_nyse(stock_folder, stock_name, date_start, date_end):
     df = stock_prices_nyse(stock_name, date_start, date_end)
     if not df.empty:
         df.to_csv(os.path.join(stock_folder, 'nyse_{0}.csv'.format(stock_name.lower())))
-
-
-# def stock_prices_nasdaq(stock_name, date_start, date_end, df=pd.DataFrame()):
-#     def clean_data(df_orig):
-#         df_clean = df_orig.copy()
-#         df_clean.columns = [i.lower().replace(' ', '') for i in df_clean.columns]
-#         df_clean['date'] = pd.to_datetime(df_clean['date'])
-#         return df_clean
-#
-#     if not df.empty:
-#         df_ = df.copy()
-#     else:
-#         df_ = df
-#
-#     number_of_rows = 100
-#     startdate = date_end - dt.timedelta(days=number_of_rows - 1)
-#     if startdate < date_start:
-#         startdate = date_start
-#     enddate = date_end
-#     start_date_format = '{month}+{day}%2C+{year}'.format(month=startdate.strftime('%b'), day=startdate.strftime('%d'),
-#                                                          year=startdate.strftime('%Y'))
-#     end_date_format = '{month}+{day}%2C+{year}'.format(month=enddate.strftime('%b'), day=enddate.strftime('%d'),
-#                                                        year=enddate.strftime('%Y'))
-#     query = 'https://www.google.com/finance/historical?q=NASDAQ%3A{stock}&num={rows}&startdate={start_date}&enddate={end_date}'.format(
-#         stock=stock_name, start_date=start_date_format, end_date=end_date_format, rows=number_of_rows)
-#     response = requests.get(query)
-#
-#     bs_response = bs(response.text, 'lxml')
-#
-#     table_data = bs_response.findAll('table', {'class': 'gf-table historical_price'})
-#     if len(table_data) > 0:
-#         df_temp = pd.read_html(str(table_data[0]), header=0)[0]
-#         df_temp = clean_data(df_temp)
-#         df_ = df_.append(df_temp)
-#         if startdate > date_start:
-#             return stock_prices_nasdaq(stock_name, date_start, startdate - dt.timedelta(days=1), df_)
-#     return df_.reset_index(drop=True)
 
 
 def save_stock_prices_nasdaq(stock_folder, stock_name, date_start, date_end):
@@ -169,3 +103,71 @@ async def save_stock_prices_nyse_asyncio(stock_folder, stock_name, date_start, d
     df = await stock_prices_nyse_asyncio(stock_name, date_start, date_end)
     if not df.empty:
         df.to_csv(os.path.join(stock_folder, 'nyse_{0}.csv'.format(stock_name.lower())))
+
+
+def stock_prices_google(stock_name, start_date, end_date):
+    ### Don't use ###
+    ### google throttles ###
+    '''
+    stock_name format: exchange:ticker
+    eg: NASDAQ:AAPL
+    '''
+    row_number = start_number = 0
+    step = rows_returned = 10
+    df = pd.DataFrame()
+    while True:
+        query = 'https://www.google.com/finance/historical?q={stock[0]}%3A{stock[1]}&startdate={start_month}%20{start_day}%2C%20{start_year}&enddate={end_month}%20{end_day}%2C%20{end_year}&ei=NXw3WMG9KtWNmAHcobLABw&start={start_number}&num={rows_returned}'.format(
+            stock=stock_name.split(':'), start_month=start_date.strftime('%b'), start_day=start_date.day,
+            start_year=start_date.year,
+            end_month=end_date.strftime('%b'), end_day=end_date.day, end_year=end_date.year, start_number=row_number,
+            rows_returned=rows_returned)
+        response = requests.get(query)
+        bs_response = bs(response.text, 'lxml')
+        if len(bs_response.find_all(id="prices")) == 0:
+            break
+        df_temp = pd.read_html(str(bs_response.find_all(id="prices")[0]))[0]
+        df_temp = df_temp.drop(labels=0)
+        df_temp.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
+        df = df.append(df_temp)
+        row_number += step
+    df.reset_index(drop=True, inplace=True)
+    return df
+
+
+def stock_prices_nasdaq(stock_name, date_start, date_end, df=pd.DataFrame()):
+    ### Don't use ###
+    ### google throttles ###
+    def clean_data(df_orig):
+        df_clean = df_orig.copy()
+        df_clean.columns = [i.lower().replace(' ', '') for i in df_clean.columns]
+        df_clean['date'] = pd.to_datetime(df_clean['date'])
+        return df_clean
+
+    if not df.empty:
+        df_ = df.copy()
+    else:
+        df_ = df
+
+    number_of_rows = 100
+    startdate = date_end - dt.timedelta(days=number_of_rows - 1)
+    if startdate < date_start:
+        startdate = date_start
+    enddate = date_end
+    start_date_format = '{month}+{day}%2C+{year}'.format(month=startdate.strftime('%b'), day=startdate.strftime('%d'),
+                                                         year=startdate.strftime('%Y'))
+    end_date_format = '{month}+{day}%2C+{year}'.format(month=enddate.strftime('%b'), day=enddate.strftime('%d'),
+                                                       year=enddate.strftime('%Y'))
+    query = 'https://www.google.com/finance/historical?q=NASDAQ%3A{stock}&num={rows}&startdate={start_date}&enddate={end_date}'.format(
+        stock=stock_name, start_date=start_date_format, end_date=end_date_format, rows=number_of_rows)
+    response = requests.get(query)
+
+    bs_response = bs(response.text, 'lxml')
+
+    table_data = bs_response.findAll('table', {'class': 'gf-table historical_price'})
+    if len(table_data) > 0:
+        df_temp = pd.read_html(str(table_data[0]), header=0)[0]
+        df_temp = clean_data(df_temp)
+        df_ = df_.append(df_temp)
+        if startdate > date_start:
+            return stock_prices_nasdaq(stock_name, date_start, startdate - dt.timedelta(days=1), df_)
+    return df_.reset_index(drop=True)

@@ -13,11 +13,7 @@ date_end = dt.datetime.now()
 
 
 def create_queue():
-    # ticker_have = [i.strip('nyse_').replace('.csv', '') for i in os.listdir(folder_stock_prices) if '.DS' not in i]
-    # #     df_temp =  df_nyse_symbols.loc[~df_nyse_symbols['symbol_lower'].isin(ticker_have)]
-    # df_temp = df_nyse_symbols.loc[:40]
     df_temp = pd.read_csv('./stock_symbols/nasdaq_symbols.csv')
-    # symbols = [i.lower() for i in df_temp['Symbol'] if i.lower().startswith(letter)]
     symbols_all = set(df_temp['Symbol'].str.lower())
     symbols_done = set([i.lower().replace('nasdaq_', '').replace('.csv', '') for i in os.listdir(folder_stock_prices)])
     symbols = symbols_all - symbols_done
