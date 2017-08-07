@@ -39,7 +39,8 @@ def test_stock(df_orig, today_date=dt.datetime.now()):
     previous_year_variance = (df.loc[previous_year_mask, 'high'].max() / df.loc[previous_year_mask, 'high'].min()) - 1
     previous_year_one_hundred_percent = previous_year_variance > 1
 
-    variance_over_two_years = (df.loc[df['date'] >= date_2_years_ago, 'high'].max() / df.loc[df['date'] >= date_2_years_ago, 'high'].min()) - 1
+    variance_over_two_years = (df.loc[df['date'] >= date_2_years_ago, 'high'].max() / df.loc[
+        df['date'] >= date_2_years_ago, 'high'].min()) - 1
 
     six_months_mask = df['date'] > today_date - dt.timedelta(days=30 * 6)
     flat_value = 8
@@ -55,7 +56,22 @@ def test_stock(df_orig, today_date=dt.datetime.now()):
                                        'actual_variance': previous_year_variance},
             'variance_over_2_years': variance_over_two_years,
             'stock_not_flat': {'result': stock_not_flat,
-                               'test_message': 'Test that the stock has not gone flat in last six monthe, Greater than {}'.format(flat_value),
+                               'test_message': 'Test that the stock has not gone flat in last six monthe, Greater than {}'.format(
+                                   flat_value),
                                'actual_value': max_last_six_months}
             }
 
+
+def eval_factors(symbol, row_date, market='nyse'):
+    eval = dict()
+    
+    df = pd.read_csv('./stock_prices/nyse/{market}_{symbol}.csv'.format(market=market, symbol=symbol))
+    df.columns = [i.lower().replace(' ', '_') for i in df.columns]
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values(by='date').reset_index(drop=True)
+    eval['factors'] = test_stock(df, today_date=df['date'].max())
+
+    row_date_index = df.loc[df['date'] == row_date].index[0]
+    eval['dates'] = df.loc[row_date_index - 1:row_date_index + 1]
+
+    return eval
