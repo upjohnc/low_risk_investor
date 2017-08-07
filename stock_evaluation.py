@@ -1,3 +1,4 @@
+import webbrowser
 import pandas as pd
 import datetime as dt
 
@@ -62,16 +63,26 @@ def test_stock(df_orig, today_date=dt.datetime.now()):
             }
 
 
-def eval_factors(symbol, row_date, market='nyse'):
-    eval = dict()
-    
+def eval_factors(symbol, row_date, market='nyse', open_chrome=False):
+    eval_ = dict()
+
     df = pd.read_csv('./stock_prices/nyse/{market}_{symbol}.csv'.format(market=market, symbol=symbol))
     df.columns = [i.lower().replace(' ', '_') for i in df.columns]
     df['date'] = pd.to_datetime(df['date'])
     df = df.sort_values(by='date').reset_index(drop=True)
-    eval['factors'] = test_stock(df, today_date=df['date'].max())
+    eval_['factors'] = test_stock(df, today_date=df['date'].max())
 
     row_date_index = df.loc[df['date'] == row_date].index[0]
-    eval['dates'] = df.loc[row_date_index - 1:row_date_index + 1]
+    eval_['dates'] = df.loc[row_date_index - 1:row_date_index + 1]
 
-    return eval
+    if open_chrome:
+        url = 'https://finance.google.com/finance?q={}&ei=bPOIWajdIsOI2AbSwpAI'.format(symbol)
+
+        chrome_path = 'open -a /Applications/Google\ Chrome.app %s'
+
+        # Windows
+        # chrome_path = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe %s'
+
+        webbrowser.get(chrome_path).open(url, new=1)
+
+    return eval_
