@@ -1,0 +1,3 @@
+,buy_row,buy_date,buy_price,stop,next_buy,sell_price,N,thing,shares,amount_invested,amount_retrieved,win,percent_win
+0,134,2009-08-13 00:00:00,24.72,"[23.887906376304144, nan]","[25.703023405923965, nan]",,0.7260468118479279,275.4643319636124,11.0,271.92,,,
+1,145,2009-08-28 00:00:00,25.7030234059,[nan],[nan],,,,,,,,
