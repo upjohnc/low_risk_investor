@@ -42,6 +42,7 @@ def get_positions(start_index, end_index, df_long_orig):
         df_new.loc[0, 'buy_date'] = df_long_for_add.loc[row_tested_orig, 'date']
 
         df_new.loc[0, 'buy_price'] = buy_price
+        print(df_long_for_add.loc[row_tested_orig, 'stop'])
         df_new.loc[0, 'stop'] = [df_long_for_add.loc[row_tested_orig, 'stop']]
         df_new.loc[0, 'next_buy'] = [df_long_for_add.loc[row_tested_orig, 'next_buy']]
         return df_new
@@ -50,6 +51,7 @@ def get_positions(start_index, end_index, df_long_orig):
         if not df_positions['sell_price'].isnull().any():
             if df_long.loc[row_tested, 'buy_signal']:
                 df_new_row = add_position(df_long, row_tested)
+                print(df_long.tail())
                 df_positions = df_positions.append(df_new_row).reset_index(drop=True)
         else:
             next_buy_value = df_positions.iloc[-1]['next_buy'][-1]
@@ -80,13 +82,13 @@ def run_for_output(symbol):
     if df is None:
         return None
 
-    df_long = get_long_data(df)
+    df_long_ = get_long_data(df)
 
-    df_positions = get_positions(0, df_long.shape[0] - 1, df_long)
+    df_positions = get_positions(0, df_long_.shape[0] - 1, df_long_)
 
     # df should look like the hand tested
 
-    df_results = df_positions.merge(df_long[['N']], how='left', left_on='buy_row', right_index=True)
+    df_results = df_positions.merge(df_long_[['N']], how='left', left_on='buy_row', right_index=True)
 
     account = 20000
     df_results['thing'] = (account * 0.01) / df_results['N']
