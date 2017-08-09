@@ -44,6 +44,7 @@ def stock_prices_nyse(stock_name, date_start, date_end, page_number=1, df=pd.Dat
                     if page_number < total_pages:
                         page_number += 1
                         return stock_prices_nyse(stock_name, date_start, date_end, page_number, df_)
+    df_ = df_.loc[df_['High'].notnull()]
     return df_
 
 
